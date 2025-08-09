@@ -1,202 +1,192 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <title>NaviPark – Find Parking</title>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>NaviPark ‒ Analytics Dashboard</title>
+    <style>
+      /* ───────────────────────────  Base resets  ─────────────────────────── */
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+        font-family: Arial, Helvetica, sans-serif;
+      }
 
-  <!-- ───── Leaflet assets for main.js ───── -->
-  <link rel="stylesheet"
-        href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-  <script defer
-          src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+      body {
+        display: flex;
+        min-height: 100vh;
+        color: #000;
+        background: #f9fdff;
+      }
 
-  <!-- ───── Page styles ───── -->
-  <style>
-    /* ===== reset & layout ===== */
-    *{margin:0;padding:0;box-sizing:border-box;}
-    body{display:flex;min-height:100vh;font-family:Arial,Helvetica,sans-serif;background:#f6fbfe;}
+      /* ───────────────────────────  Sidebar  ─────────────────────────── */
+      .sidebar {
+        width: 240px;
+        background: #0086c6; /* brand-blue */
+        padding: 48px 0 24px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 32px;
+      }
 
-    /* ===== sidebar ===== */
-    .sidebar{
-      width:240px;background:#0077b3;color:#fff;
-      padding:48px 0 24px;display:flex;flex-direction:column;align-items:center;gap:32px;
-    }
-    .brand{font-size:32px;font-weight:700;}
-    nav{width:100%;}
-    nav a{
-      display:block;width:calc(100% - 48px);margin:8px 24px;padding:14px 18px;
-      text-decoration:none;font-weight:600;border-radius:4px;background:#fff;color:#000;
-    }
-    nav a.active{background:#d6efff;}
+      .brand {
+        font-size: 32px;
+        font-weight: 700;
+        color: #ffffff;
+      }
 
-    /* ===== main panel ===== */
-    main{flex:1;padding:32px 56px;overflow-y:auto;}
-    h1{font-size:28px;text-align:center;margin-bottom:28px;}
+      nav {
+        width: 100%;
+      }
 
-    /* controls row */
-    .controls{
-      display:grid;grid-template-columns:1fr 160px 120px;gap:24px;align-items:center;margin-bottom:12px;
-    }
-    .controls label{font-size:14px;font-weight:600;display:block;margin-bottom:4px;}
-    .controls input[type=text],
-    .controls select{width:100%;padding:8px 10px;border:2px solid #ccc;border-radius:4px;}
+      nav a {
+        display: block;
+        width: calc(100% - 48px);
+        margin: 8px 24px;
+        padding: 14px 18px;
+        border-radius: 4px;
+        text-decoration: none;
+        font-weight: 600;
+        background: #ffffff;
+        color: #000000;
+      }
 
-    /* accessibility switch */
-    .switch{position:relative;display:inline-block;width:46px;height:24px;}
-    .switch input{opacity:0;width:0;height:0;}
-    .slider{
-      position:absolute;inset:0;cursor:pointer;background:#ccc;border-radius:24px;transition:.2s;
-    }
-    .slider:before{
-      content:"";position:absolute;height:18px;width:18px;left:3px;top:3px;background:#fff;border-radius:50%;transition:.2s;
-    }
-    input:checked + .slider{background:#00b96f;}
-    input:checked + .slider:before{transform:translateX(22px);}
+      nav a.active {
+        background: #d6efff; /* light highlight */
+      }
 
-    /* distance slider */
-    .distance-wrapper{margin:24px 0 36px;position:relative;}
-    #distance{width:100%;}
-    .distance-wrapper .labels{
-      display:flex;justify-content:space-between;font-size:12px;color:#555;margin-top:4px;
-    }
-    .distance-bubble{
-      position:absolute;top:-30px;left:50%;transform:translateX(-50%);
-      padding:2px 6px;background:#0086c6;color:#fff;font-size:12px;border-radius:4px;
-    }
+      /* ───────────────────────────  Main panel  ─────────────────────────── */
+      main {
+        flex: 1;
+        padding: 40px 56px;
+      }
 
-    .results{
-        display:grid;
-        grid-template-columns:1fr 1fr;   /* 50 % | 50 %  */
-        gap:32px;
-    }
+      h2 {
+        text-align: center;
+        font-size: 28px;
+        margin-bottom: 40px;
+      }
 
-    #map{       
-        width:100%;
-        height:550px;                   /* tweak as you like */
-        border:2px solid #0077b3;
-        border-radius:4px;
-    }
+      /* Charts grid */
+      .charts {
+        display: grid;
+        gap: 20px;
+        grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+        justify-items: center;
+      }
 
-    /* parking cards */
-    .card{
-      background:#fff;border-radius:8px;padding:18px 24px;margin-bottom:24px;
-      box-shadow:0 2px 6px rgba(0,0,0,.05);display:flex;flex-direction:column;gap:6px;
-    }
-    .card h3{font-size:18px;}
-    .card .addr{font-size:13px;color:#666;}
-    .card .stats{font-family:monospace;font-size:28px;margin:8px 0;}
-    .tag{display:inline-block;padding:2px 6px;font-size:11px;background:#c74242;color:#fff;border-radius:4px;}
+      .chart-card {
+        width: 100%;
+        max-width: 600px;
+        background: #eaf7ff;
+        border-radius: 8px;
+        padding: 10px;
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+        text-align: center;
+      }
 
-    .actions{display:flex;justify-content:center;margin:8px 0 24px;}
-    .btn{
-      padding:10px 16px;border:none;border-radius:6px;background:#0077b3;color:#fff;
-      font-weight:700;cursor:pointer;box-shadow:0 2px 6px rgba(0,0,0,.1);
-    }
-    .btn:active{transform:translateY(1px);}
-    .btn:disabled{opacity:.6;cursor:not-allowed;}
+      .chart-card img {
+        width: 100%;
+        height: auto;
+        border-radius: 4px;
+      }
 
-  </style>
-</head>
-<body>
-  <!-- ===== sidebar ===== -->
-  <aside class="sidebar">
-    <div class="brand">NaviPark</div>
-    <nav>
-      <a href="dashboard.html">Dashboard</a>
-      <a href="index.html" class="active">Find Parking</a>
-      <a href="#">Parking Prediction</a>
-      <a href="#">Historical Trends</a>
-    </nav>
-  </aside>
+      .chart-card figcaption {
+        margin-top: 12px;
+        font-weight: 600;
+      }
 
-  <!-- ===== main content ===== -->
-  <main>
-    <h1>Where do you want to park?</h1>
+      /* ───────────────────────────  Insights  ─────────────────────────── */
+      .insights {
+        margin-top: 48px;
+      }
 
-    <!-- controls -->
-    <div class="controls">
-      <div>
-        <label for="loc">Location</label>
-        <input id="loc" type="text" placeholder="QV, Melbourne CBD" />
-      </div>
+      .insights-box {
+        background: #eff9ff;
+        border-radius: 8px;
+        padding: 20px 24px;
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+      }
 
-      <div>
-        <label for="fee">Fee</label>
-        <select id="fee">
-          <option>Any</option>
-          <option>Free</option>
-          <option>Paid &lt; $10/hr</option>
-          <option>Paid &gt;= $10/hr</option>
-        </select>
-      </div>
+      /* Heading row: bulb + “Insights” */
+      .insights-header {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 12px;
+      }
 
-      <div>
-        <label>Accessibility</label><br/>
-        <label class="switch">
-          <input type="checkbox" id="accessible"/>
-          <span class="slider"></span>
-        </label>
-      </div>
-    </div>
+      .insights-icon {
+        font-size: 28px; /* bulb size */
+        line-height: 1;
+      }
 
-    <!-- distance slider -->
-    <div class="distance-wrapper">
-      <input id="distance" type="range" min="50" max="500" step="10" value="200"/>
-      <span class="distance-bubble" id="distBubble">200&nbsp;m</span>
-      <div class="labels">
-        <span>&lt; 50 m</span>
-        <span>&gt; 500 m</span>
-      </div>
-    </div>
+      .insights-label {
+        font-weight: 700;
+        font-size: 18px;
+      }
 
-    <div class="actions">
-      <button id="searchBtn" class="btn" type="button">Search</button>
-    </div>
+      .insights-box ul {
+        margin-left: 18px;
+      }
 
-    <!-- map + list -->
-    <div class="results">
-      <!-- Live map — main.js will populate -->
-      <div id="map"></div>
+      .insights-box li {
+        margin-bottom: 8px;
+        line-height: 1.4;
+      }
+    </style>
+  </head>
+  <body>
+    <aside class="sidebar">
+      <div class="brand">NaviPark</div>
+      <nav>
+        <a href="index.html" class="active">Dashboard</a>
+        <a href="find-parking.html">Find Parking</a>
+        <a href="#">Parking Prediction</a>
+        <a href="#">Historical Trends</a>
+      </nav>
+    </aside>
 
-      <!-- Placeholder cards (you’ll likely generate these dynamically later) -->
-      <section id="parkingList">
-        <article class="card">
-          <h3>QV Carpark</h3>
-          <p class="addr">200 Lonsdale St, Melbourne VIC 3000</p>
-          <div class="stats">8 | 200 <span class="tag">Limited</span></div>
-          <p>$15/hr</p>
-        </article>
+    <main>
+      <h2>Analytics Dashboard</h2>
 
-        <article class="card">
-          <h3>Wilson Parking</h3>
-          <p class="addr">80 Lonsdale St, Melbourne VIC 3000</p>
-          <div class="stats">120 | 200 <span class="tag">Limited</span></div>
-          <p>$20/hr</p>
-        </article>
+      <section class="charts">
+        <figure class="chart-card">
+          <img
+            src="./assets/ownership.jpeg"
+            alt="Growth of car ownership chart"
+          />
+          <figcaption>Growth of car ownership</figcaption>
+        </figure>
 
-        <article class="card">
-          <h3>QV1 Residents Car Park</h3>
-          <p class="addr">80 Lonsdale St, Melbourne VIC 3000</p>
-          <div class="stats">60 | 200</div>
-          <p>$12/hr</p>
-        </article>
+        <figure class="chart-card">
+          <img
+            src="./assets/population.jpeg"
+            alt="Melbourne population growth chart"
+          />
+          <figcaption>Melbourne population growth</figcaption>
+        </figure>
       </section>
-    </div>
-  </main>
 
-  <!-- ===== tiny helper for the distance bubble (pure UI) ===== -->
-  <script>
-    const range   = document.getElementById('distance');
-    const bubble  = document.getElementById('distBubble');
-    const update  = () => {
-      bubble.textContent = range.value + ' m';
-      const pct = (range.value - 50) / (500 - 50);
-      bubble.style.left = `calc(${pct * 100}% )`;
-    };
-    range.addEventListener('input', update); update();
-  </script>
+      <section class="insights">
+        <div class="insights-box">
+          <div class="insights-header">
+            <span class="insights-icon" aria-hidden="true">💡</span>
+            <span class="insights-label">Insights</span>
+          </div>
 
-  <!-- ===== main ES-module that draws the Leaflet map ===== -->
-  <script type="module" src="./main.js"></script>
-</body>
+          <ul>
+            <li>Car ownership growth rose, peaked, and has begun to taper off.</li>
+            <li>Melbourne’s population curve rises overall, with only a brief plateau.</li>
+            <li>
+              Population is still outpacing new cars, suggesting changing transport and
+              parking demands.
+            </li>
+          </ul>
+        </div>
+      </section>
+    </main>
+  </body>
 </html>
