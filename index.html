@@ -86,6 +86,15 @@
     .card .addr{font-size:13px;color:#666;}
     .card .stats{font-family:monospace;font-size:28px;margin:8px 0;}
     .tag{display:inline-block;padding:2px 6px;font-size:11px;background:#c74242;color:#fff;border-radius:4px;}
+
+    .actions{display:flex;justify-content:center;margin:8px 0 24px;}
+    .btn{
+      padding:10px 16px;border:none;border-radius:6px;background:#0077b3;color:#fff;
+      font-weight:700;cursor:pointer;box-shadow:0 2px 6px rgba(0,0,0,.1);
+    }
+    .btn:active{transform:translateY(1px);}
+    .btn:disabled{opacity:.6;cursor:not-allowed;}
+
   </style>
 </head>
 <body>
@@ -138,6 +147,10 @@
         <span>&lt; 50 m</span>
         <span>&gt; 500 m</span>
       </div>
+    </div>
+
+    <div class="actions">
+      <button id="searchBtn" class="btn" type="button">Search</button>
     </div>
 
     <!-- map + list -->

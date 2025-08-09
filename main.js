@@ -62,11 +62,20 @@ async function showUnoccupiedBaysOnMap(streetName) {
     return [-37.814, 144.96332]; // CBD fallback
   }
   
-  const map = L.map('map').setView(getInitialView(unoccupiedRows), 17);
+  // const map = L.map('map').setView(getInitialView(unoccupiedRows), 17);
+
+  // L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+  //   attribution: '© OpenStreetMap contributors'
+  // }).addTo(map);
+
+  let map; // reuse across searches
+  if (map) map.remove(); // clear previous instance
+  map = L.map('map').setView(getInitialView(unoccupiedRows), 17);
 
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     attribution: '© OpenStreetMap contributors'
   }).addTo(map);
+
 
   unoccupiedRows.forEach(
     ({ kerbsideid, location }) => {
@@ -84,4 +93,18 @@ async function showUnoccupiedBaysOnMap(streetName) {
 /* -------------------------------------------------------------
    Kick things off
 ------------------------------------------------------------- */
-showUnoccupiedBaysOnMap('Queen Street');     // change street name as needed
+// showUnoccupiedBaysOnMap('Queen Street');     // change street name as needed
+// Wire up the Search button to call showUnoccupiedBaysOnMap
+const searchBtn = document.getElementById('searchBtn');
+const locInput  = document.getElementById('loc');
+
+function doSearch() {
+  const street = locInput.value.trim();
+  if (!street) { alert('Please enter a street name.'); return; }
+  showUnoccupiedBaysOnMap(street);
+}
+
+searchBtn?.addEventListener('click', doSearch);
+locInput?.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') doSearch();
+});
