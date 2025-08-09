@@ -16,7 +16,7 @@ const SENSOR_URL     = `https://data.melbourne.vic.gov.au/api/explore/v2.1/catal
 export async function fetchSegmentIds(streetName, limit = 100) {
   console.log('fetching segment_id from street-segment dataset…');
 
-  const where  = `onstreet = "${streetName}"`;           // exact match
+  const where  = `lower(onstreet) = "${streetName.toLowerCase()}"`;           // exact match
   const params = new URLSearchParams({ select: 'segment_id', where, limit });
 
   const res  = await fetch(`${SEGMENT_URL}?${params}`);
