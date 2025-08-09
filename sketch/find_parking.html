@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>NaviPark ‒ Find Parking</title>
+    <style>
+      /* ───────────────────────────  Base resets  ─────────────────────────── */
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+        font-family: Arial, Helvetica, sans-serif;
+      }
+
+      body {
+        display: flex;
+        min-height: 100vh;
+        color: #000;
+        background: #f9fdff;
+      }
+
+      /* ───────────────────────────  Sidebar  ─────────────────────────── */
+      .sidebar {
+        width: 240px;
+        background: #0086c6;
+        padding: 48px 0 24px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 32px;
+      }
+
+      .brand {
+        font-size: 32px;
+        font-weight: 700;
+        color: #ffffff;
+      }
+
+      nav {
+        width: 100%;
+      }
+
+      nav a {
+        display: block;
+        width: calc(100% - 48px);
+        margin: 8px 24px;
+        padding: 14px 18px;
+        border-radius: 4px;
+        text-decoration: none;
+        font-weight: 600;
+        background: #ffffff;
+        color: #000000;
+      }
+
+      nav a.active {
+        background: #d6efff;
+      }
+
+      /* ───────────────────────────  Main panel  ─────────────────────────── */
+      main {
+        flex: 1;
+        padding: 40px 56px;
+      }
+
+      h2 {
+        text-align: center;
+        font-size: 28px;
+        margin-bottom: 40px;
+      }
+
+      /* ───────────────────────────  Filters area  ─────────────────────────── */
+      .filters {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+        gap: 24px;
+        align-items: center;
+        margin-bottom: 32px;
+      }
+
+      label {
+        font-size: 15px;
+        font-weight: 600;
+        margin-bottom: 6px;
+        display: block;
+      }
+
+      input[type="text"],
+      select {
+        width: 100%;
+        padding: 10px 12px;
+        border: 2px solid #b2b2b2;
+        border-radius: 6px;
+        font-size: 15px;
+      }
+
+      /* Toggle */
+      .switch {
+        position: relative;
+        display: inline-block;
+        width: 48px;
+        height: 24px;
+      }
+      .switch input {
+        opacity: 0;
+        width: 0;
+        height: 0;
+      }
+      .slider {
+        position: absolute;
+        cursor: pointer;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-color: #cccccc;
+        transition: 0.2s;
+        border-radius: 24px;
+      }
+      .slider:before {
+        position: absolute;
+        content: "";
+        height: 18px;
+        width: 18px;
+        left: 3px;
+        bottom: 3px;
+        background-color: white;
+        transition: 0.2s;
+        border-radius: 50%;
+      }
+      input:checked + .slider {
+        background-color: #ff7d7d;
+      }
+      input:checked + .slider:before {
+        transform: translateX(24px);
+      }
+
+      /* ───────────────────────────  Distance slider  ─────────────────────────── */
+      .distance-wrapper {
+        margin: 12px 0 32px;
+      }
+      .distance-values {
+        display: flex;
+        justify-content: space-between;
+        font-size: 14px;
+        font-weight: 600;
+        margin-bottom: 8px;
+      }
+      input[type="range"] {
+        width: 100%;
+        accent-color: #0086c6;
+      }
+      .bubble {
+        position: relative;
+        display: inline-block;
+        transform: translateY(-12px);
+        padding: 4px 8px;
+        border-radius: 4px;
+        background: #0086c6;
+        color: #ffffff;
+        font-size: 12px;
+        font-weight: 600;
+      }
+
+      /* ───────────────────────────  Map & list layout  ─────────────────────────── */
+      .results {
+        display: grid;
+        grid-template-columns: 350px 1fr;
+        gap: 32px;
+      }
+      .map-container {
+        position: relative;
+      }
+      .map-container img {
+        width: 100%;
+        height: auto;
+        border-radius: 8px;
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+      }
+      .zoom-btns {
+        position: absolute;
+        top: 12px;
+        left: 12px;
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+      }
+      .zoom-btns button {
+        width: 36px;
+        height: 36px;
+        border: 2px solid #000;
+        border-radius: 6px;
+        background: #fff;
+        font-size: 20px;
+        cursor: pointer;
+      }
+
+      /* Parking list */
+      .parking-list {
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+      }
+      .parking-card {
+        background: #ffffff;
+        border: 2px solid #dfe8ee;
+        border-radius: 8px;
+        padding: 18px 20px;
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+      }
+      .parking-card h3 {
+        font-size: 18px;
+        margin-bottom: 6px;
+      }
+      .parking-card .addr {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 14px;
+        margin-bottom: 12px;
+        color: #555;
+      }
+      .pin {
+        font-size: 16px;
+      }
+      .capacity {
+        font-size: 24px;
+        font-weight: 700;
+        margin-bottom: 10px;
+      }
+      .limited {
+        display: inline-block;
+        background: #ff9ea0;
+        color: #000;
+        padding: 2px 10px;
+        border-radius: 4px;
+        font-size: 13px;
+        font-weight: 600;
+        margin-left: 12px;
+      }
+      .price {
+        font-size: 15px;
+        font-weight: 600;
+        color: #444;
+      }
+
+      /* ───────────────────────────  Responsive  ─────────────────────────── */
+      @media (max-width: 900px) {
+        .results {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <aside class="sidebar">
+      <div class="brand">NaviPark</div>
+      <nav>
+        <a href="dashboard.html" class="active">Dashboard</a>
+        <a href="find_parking.html">Find Parking</a>
+        <a href="#">Parking Prediction</a>
+        <a href="#">Historical Trends</a>
+      </nav>
+    </aside>
+
+    <main>
+      <h2>Where do you want to park?</h2>
+
+      <!-- Filters -->
+      <section class="filters">
+        <div>
+          <label for="location">Location</label>
+          <input type="text" id="location" value="QV, Melbourne CBD" />
+        </div>
+
+        <div>
+          <label for="fee">Fee</label>
+          <select id="fee">
+            <option>Free</option>
+            <option>Under $10/hr</option>
+            <option>Above $10/hr</option>
+          </select>
+        </div>
+
+        <div>
+          <label for="accessibility">Accessibility</label>
+          <label class="switch">
+            <input type="checkbox" id="accessibility" />
+            <span class="slider"></span>
+          </label>
+        </div>
+      </section>
+
+      <!-- Distance slider -->
+      <section class="distance-wrapper">
+        <div class="distance-values">
+          <span>&lt; 50 m</span>
+          <span>&gt; 500 m</span>
+        </div>
+        <input
+          type="range"
+          id="distance"
+          min="50"
+          max="500"
+          step="10"
+          value="200"
+          oninput="updateBubble(this)"
+        />
+        <span id="distance-bubble" class="bubble">200 m</span>
+      </section>
+
+      <!-- Map & List -->
+      <section class="results">
+        <div class="map-container">
+          <!-- Replace with your PNG map image -->
+          <img src="map.png" alt="Map showing parking bays" />
+          <!-- <div class="zoom-btns">
+            <button>+</button>
+            <button>−</button>
+          </div> -->
+        </div>
+
+        <div>
+          <h3 style="margin-bottom: 16px; font-size: 20px;">Parking location</h3>
+          <div class="parking-list">
+            <!-- Card 1 -->
+            <div class="parking-card">
+              <h3>QV carpark</h3>
+              <div class="addr"><span class="pin">📍</span>200 Lonsdale St, Melbourne VIC 3000</div>
+              <div class="capacity">
+                8 │ 200 <span class="limited">Limited</span>
+              </div>
+              <div class="price">$15/hr</div>
+            </div>
+
+            <!-- Card 2 -->
+            <div class="parking-card">
+              <h3>Wilson parking</h3>
+              <div class="addr"><span class="pin">📍</span>80 Lonsdale St, Melbourne VIC 3000</div>
+              <div class="capacity">
+                120 │ 200 <span class="limited">Limited</span>
+              </div>
+              <div class="price">$20/hr</div>
+            </div>
+
+            <!-- Card 3 -->
+            <div class="parking-card">
+              <h3>QV1 Residents Car Park</h3>
+              <div class="addr"><span class="pin">📍</span>80 Lonsdale St, Melbourne VIC 3000</div>
+              <div class="capacity">60 │ 200</div>
+              <div class="price">$12/hr</div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <script>
+      function updateBubble(range) {
+        const bubble = document.getElementById("distance-bubble");
+        bubble.textContent = range.value + " m";
+        // Position bubble near thumb
+        const percent = ((range.value - range.min) / (range.max - range.min)) * 100;
+        bubble.style.left = `calc(${percent}% - 20px)`;
+      }
+      // initialise position
+      document.addEventListener("DOMContentLoaded", () => {
+        updateBubble(document.getElementById("distance"));
+      });
+    </script>
+  </body>
+</html>

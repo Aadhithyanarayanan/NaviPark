@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>NaviPark ‒ Analytics Dashboard</title>
+    <style>
+      /* ───────────────────────────  Base resets  ─────────────────────────── */
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+        font-family: Arial, Helvetica, sans-serif;
+      }
+
+      body {
+        display: flex;
+        min-height: 100vh;
+        color: #000;
+        background: #f9fdff;
+      }
+
+      /* ───────────────────────────  Sidebar  ─────────────────────────── */
+      .sidebar {
+        width: 240px;
+        background: #0086c6; /* brand-blue */
+        padding: 48px 0 24px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 32px;
+      }
+
+      .brand {
+        font-size: 32px;
+        font-weight: 700;
+        color: #ffffff;
+      }
+
+      nav {
+        width: 100%;
+      }
+
+      nav a {
+        display: block;
+        width: calc(100% - 48px);
+        margin: 8px 24px;
+        padding: 14px 18px;
+        border-radius: 4px;
+        text-decoration: none;
+        font-weight: 600;
+        background: #ffffff;
+        color: #000000;
+      }
+
+      nav a.active {
+        background: #d6efff; /* light highlight */
+      }
+
+      /* ───────────────────────────  Main panel  ─────────────────────────── */
+      main {
+        flex: 1;
+        padding: 40px 56px;
+      }
+
+      h2 {
+        text-align: center;
+        font-size: 28px;
+        margin-bottom: 40px;
+      }
+
+      /* Charts grid */
+      .charts {
+        display: grid;
+        gap: 20px;
+        grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+        justify-items: center;
+      }
+
+      .chart-card {
+        width: 100%;
+        max-width: 600px;
+        background: #eaf7ff;
+        border-radius: 8px;
+        padding: 10px;
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+        text-align: center;
+      }
+
+      .chart-card img {
+        width: 100%;
+        height: auto;
+        border-radius: 4px;
+      }
+
+      .chart-card figcaption {
+        margin-top: 12px;
+        font-weight: 600;
+      }
+
+      /* ───────────────────────────  Insights  ─────────────────────────── */
+      .insights {
+        margin-top: 48px;
+      }
+
+      .insights-box {
+        background: #eff9ff;
+        border-radius: 8px;
+        padding: 20px 24px;
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+      }
+
+      /* Heading row: bulb + “Insights” */
+      .insights-header {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 12px;
+      }
+
+      .insights-icon {
+        font-size: 28px; /* bulb size */
+        line-height: 1;
+      }
+
+      .insights-label {
+        font-weight: 700;
+        font-size: 18px;
+      }
+
+      .insights-box ul {
+        margin-left: 18px;
+      }
+
+      .insights-box li {
+        margin-bottom: 8px;
+        line-height: 1.4;
+      }
+    </style>
+  </head>
+  <body>
+    <aside class="sidebar">
+      <div class="brand">NaviPark</div>
+      <nav>
+        <a href="dashboard.html" class="active">Dashboard</a>
+        <a href="index.html">Find Parking</a>
+        <a href="#">Parking Prediction</a>
+        <a href="#">Historical Trends</a>
+      </nav>
+    </aside>
+
+    <main>
+      <h2>Analytics Dashboard</h2>
+
+      <section class="charts">
+        <figure class="chart-card">
+          <img
+            src="./assets/ownership.jpeg"
+            alt="Growth of car ownership chart"
+          />
+          <figcaption>Growth of car ownership</figcaption>
+        </figure>
+
+        <figure class="chart-card">
+          <img
+            src="./assets/population.jpeg"
+            alt="Melbourne population growth chart"
+          />
+          <figcaption>Melbourne population growth</figcaption>
+        </figure>
+      </section>
+
+      <section class="insights">
+        <div class="insights-box">
+          <div class="insights-header">
+            <span class="insights-icon" aria-hidden="true">💡</span>
+            <span class="insights-label">Insights</span>
+          </div>
+
+          <ul>
+            <li>Car ownership growth rose, peaked, and has begun to taper off.</li>
+            <li>Melbourne’s population curve rises overall, with only a brief plateau.</li>
+            <li>
+              Population is still outpacing new cars, suggesting changing transport and
+              parking demands.
+            </li>
+          </ul>
+        </div>
+      </section>
+    </main>
+  </body>
+</html>

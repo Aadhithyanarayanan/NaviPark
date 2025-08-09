@@ -1,0 +1,164 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>NaviPark – Find Parking</title>
+
+  <!-- Leaflet CSS -->
+  <link rel="stylesheet"
+        href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+
+  <!-- Optional icon font for the pin glyphs -->
+  <link rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+
+  <style>
+    /* ---------- layout ---------- */
+    *{box-sizing:border-box;margin:0;padding:0;font-family:system-ui,Arial,sans-serif}
+    body      {display:flex;height:100vh;color:#222}
+    aside     {width:200px;background:#0079BF;color:#fff;padding:24px 16px}
+    main      {flex:1;display:flex;flex-direction:column;padding:32px 48px;overflow:hidden}
+
+    /* ---------- sidebar ---------- */
+    .logo     {font-size:32px;font-weight:600;margin-bottom:48px}
+    .nav-btn  {display:block;width:100%;padding:10px 12px;margin-bottom:12px;
+               background:#fff;border:none;border-radius:4px;text-align:left;font-size:14px}
+    .nav-btn.active{background:#CBE6FF;color:#0079BF;font-weight:600}
+
+    /* ---------- headline & form ---------- */
+    h2        {font-size:28px;font-weight:600;margin-bottom:24px}
+    .form-row {display:flex;gap:24px;flex-wrap:wrap;margin-bottom:16px}
+    label     {font-size:14px;font-weight:600;display:flex;flex-direction:column;gap:6px}
+
+    input[type="text"], select{
+      padding:6px 8px;border:1px solid #ccc;border-radius:4px;width:180px
+    }
+
+    /* toggle switch */
+    .switch   {position:relative;width:50px;height:25px}
+    .switch input{opacity:0;width:0;height:0}
+    .slider   {position:absolute;cursor:pointer;inset:0;background:#ccc;border-radius:25px;
+               transition:.3s}
+    .slider:before{content:"";position:absolute;height:19px;width:19px;left:3px;top:3px;
+                   background:#fff;border-radius:50%;transition:.3s}
+    input:checked + .slider{background:#e55}
+    input:checked + .slider:before{transform:translateX(25px)}
+
+    /* ---------- distance slider ---------- */
+    .dist-wrap{display:flex;align-items:center;gap:8px;margin-bottom:16px}
+    .range    {flex:1}
+    .bubble   {padding:2px 6px;background:#0079BF;color:#fff;border-radius:4px;font-size:12px}
+
+    /* ---------- map & list ---------- */
+    .content  {flex:1;display:flex;gap:32px;overflow:hidden}
+    #map      {flex:1 1 50%;min-height:320px;border:1px solid #ddd;border-radius:8px}
+    .list     {flex:1 1 40%;overflow:auto}
+    .card     {border:1px solid #ccd;border-radius:8px;padding:16px;margin-bottom:16px}
+    .card h3  {font-size:16px;margin-bottom:4px}
+    .addr     {font-size:12px;color:#666;margin-bottom:8px;display:flex;align-items:center;gap:6px}
+    .badge    {background:#f2f2f2;border-radius:4px;padding:2px 6px;font-size:11px}
+    .limited  {background:#ffb3b3;color:#800}
+  </style>
+</head>
+<body>
+  <!-- ---------- sidebar ---------- -->
+  <aside>
+    <div class="logo">NaviPark</div>
+    <button class="nav-btn">Dashboard</button>
+    <button class="nav-btn active">Find Parking</button>
+    <button class="nav-btn">Parking Prediction</button>
+    <button class="nav-btn">Historical Trends</button>
+  </aside>
+
+  <!-- ---------- main content ---------- -->
+  <main>
+    <h2>Where do you want to park?</h2>
+
+    <!-- controls -->
+    <div class="form-row">
+      <label>location
+        <input type="text" value="QV, Melbourne CBD">
+      </label>
+
+      <label>Fee
+        <select>
+          <option>Free</option>
+          <option>&lt; $5/hr</option>
+          <option>&lt; $10/hr</option>
+        </select>
+      </label>
+
+      <label>Accessibility
+        <span class="switch">
+          <input type="checkbox" id="accChk">
+          <span class="slider"></span>
+        </span>
+      </label>
+    </div>
+
+    <!-- distance slider -->
+    <div class="dist-wrap">
+      <span>&lt; 50 m</span>
+      <input id="distSlider" type="range" min="50" max="500" value="200" step="50" class="range">
+      <span class="bubble" id="distBubble">200 m</span>
+      <span>&gt; 500 m</span>
+    </div>
+
+    <!-- map & list -->
+    <div class="content">
+      <div id="map"></div>
+
+      <div class="list">
+        <h3 style="margin-bottom:12px">Parking location</h3>
+
+        <div class="card">
+          <h3>QV carpark</h3>
+          <div class="addr"><i class="fa-solid fa-location-dot"></i>200 Lonsdale St, Melbourne</div>
+          <div><strong>8</strong> | 200 <span class="badge limited">Limited</span></div>
+          <div style="font-size:12px;margin-top:6px">$15/hr</div>
+        </div>
+
+        <div class="card">
+          <h3>Wilson parking</h3>
+          <div class="addr"><i class="fa-solid fa-location-dot"></i>80 Lonsdale St, Melbourne</div>
+          <div><strong>120</strong> | 200 <span class="badge limited">Limited</span></div>
+          <div style="font-size:12px;margin-top:6px">$20/hr</div>
+        </div>
+
+        <div class="card">
+          <h3>QV1 Residents Car Park</h3>
+          <div class="addr"><i class="fa-solid fa-location-dot"></i>90 Lonsdale St, Melbourne</div>
+          <div><strong>60</strong> | 120</div>
+          <div style="font-size:12px;margin-top:6px">$18/hr</div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- ---------- scripts ---------- -->
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script>
+    /** --- distance bubble --- **/
+    const slider = document.getElementById('distSlider');
+    const bubble = document.getElementById('distBubble');
+    const updateBubble = () => bubble.textContent = slider.value + ' m';
+    slider.addEventListener('input', updateBubble);
+    updateBubble();
+
+    /** --- Leaflet map --- **/
+    const map = L.map('map').setView([-37.8136, 144.9631], 15); // Melbourne CBD
+
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '© OpenStreetMap contributors'
+    }).addTo(map);
+
+    // Example markers (replace with live parking bay coords)
+    const points = [
+      [-37.8129, 144.9646],
+      [-37.8145, 144.9632],
+      [-37.8130, 144.9610]
+    ];
+    points.forEach(p => L.marker(p).addTo(map));
+  </script>
+</body>
+</html>
