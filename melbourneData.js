@@ -30,40 +30,75 @@ export async function fetchSegmentIds(streetName, limit = 100) {
 /* ------------------------------------------------------------------
    2️⃣  segment_id[]  ➜  kerbsideid[]
 ------------------------------------------------------------------ */
-export async function fetchKerbsideIdsBySegment(segmentIds, limit = 100) {
-  console.log('fetching kerbsideid from parking-bays dataset…');
-  const where  = `roadsegmentid IN (${segmentIds.join(',')}) AND kerbsideid IS NOT NULL`;
-  
-  // const params = new URLSearchParams({ select: 'kerbsideid', where, limit });
-
-  // const res  = await fetch(`${BAY_URL}?${params}`);
-  // --- build query string ---
-  const params = new URLSearchParams({
-  select: 'kerbsideid',
-  where, limit });
-  const query = params.toString().replace(/\+/g, '%20');
-  const res   = await fetch(`${BAY_URL}?${query}`);
 
 
-  if (!res.ok) throw new Error(`bays API ${res.status}`);
+export async function fetchKerbsideIdsBySegment(segmentIds, pageSize = 100) {
+  const where = `roadsegmentid IN (${segmentIds.join(',')}) AND kerbsideid IS NOT NULL`;
+  const ids = new Set();
+  let offset = 0;
+  const MAX_PAGE = 100;        // API max
+  const MAX_TOTAL = 1000;     // offset+limit cap for records
 
-  const data  = await res.json();
-  const rows  = Array.isArray(data) ? data : data.results ?? [];
-  return rows.map(r => Number(r.kerbsideid));            // [65479, 65447, …]
+  while (offset < MAX_TOTAL) {
+    const limitThisCall = Math.min(pageSize, MAX_PAGE, MAX_TOTAL - offset);
+    if (limitThisCall <= 0) break;
+
+    const params = new URLSearchParams({
+      select: 'kerbsideid',
+      where,
+      limit: String(limitThisCall),
+      offset: String(offset),
+    });
+    const res = await fetch(`${BAY_URL}?${params.toString().replace(/\+/g, '%20')}`);
+    if (!res.ok) throw new Error(`bays API ${res.status}`);
+
+    const data = await res.json();
+    const rows = Array.isArray(data) ? data : data.results ?? [];
+    rows.forEach(r => r.kerbsideid != null && ids.add(Number(r.kerbsideid)));
+
+    if (rows.length < limitThisCall) break;   // no more pages
+    offset += rows.length;
+  }
+  return [...ids];
 }
 
 /* ------------------------------------------------------------------
    3️⃣  kerbsideid[]  ➜  unoccupied sensor rows   (unchanged)
 ------------------------------------------------------------------ */
-export async function fetchUnoccupiedBays(kerbsideIds, limit = kerbsideIds.length) {
-  const where  = `kerbsideid IN (${kerbsideIds.join(',')}) AND status_description = 'Unoccupied'`;
-  const params = new URLSearchParams({ select: 'kerbsideid, location', where, limit });
 
-  console.log('fetching unoccupied bays from sensor dataset…');
-  const res = await fetch(`${SENSOR_URL}?${params}`);
-  if (!res.ok) throw new Error(`sensor API ${res.status}`);
+export async function fetchUnoccupiedBays(kerbsideIds) {
+  const MAX_LIMIT   = 100;   // API max per call
+  const CHUNK_SIZE  = 200;   // ids per IN(...) to keep URLs sane
+  const allRows = [];
 
-  const data = await res.json();
-  return Array.isArray(data) ? data : data.results ?? [];
+  // Split kerbsideIds into manageable chunks
+  for (let i = 0; i < kerbsideIds.length; i += CHUNK_SIZE) {
+    const chunk = kerbsideIds.slice(i, i + CHUNK_SIZE);
+
+    // Paginate each chunk until we’ve fetched everything
+    let offset = 0;
+    while (true) {
+      const where = `kerbsideid IN (${chunk.join(',')}) AND status_description = 'Unoccupied'`;
+      const params = new URLSearchParams({
+        select: 'kerbsideid, location',
+        where,
+        limit: String(MAX_LIMIT),
+        offset: String(offset),
+      });
+
+      const url = `${SENSOR_URL}?${params.toString().replace(/\+/g, '%20')}`;
+      const res = await fetch(url);
+      if (!res.ok) throw new Error(`sensor API ${res.status}`);
+
+      const data = await res.json();
+      const rows = Array.isArray(data) ? data : data.results ?? [];
+      allRows.push(...rows);
+
+      if (rows.length < MAX_LIMIT) break; // no more pages for this chunk
+      offset += rows.length;
+    }
+  }
+  return allRows;
 }
+
 

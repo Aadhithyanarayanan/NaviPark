@@ -26,13 +26,26 @@ function initMap() {
 }
 
 /* Show results area (map + cards) only when searching */
+// function ensureResultsVisible() {
+//   const results = document.querySelector('.results');
+//   if (!results) return;
+//   if (results.style.display === 'none') {
+//     results.style.display = 'grid';     // match your CSS grid layout
+//     initMap();
+//     // Let Leaflet recalc once it's visible
+//     setTimeout(() => map.invalidateSize(), 0);
+//   } else if (!mapReady) {
+//     initMap();
+//   }
+// }
 function ensureResultsVisible() {
   const results = document.querySelector('.results');
   if (!results) return;
+  results.classList.remove('is-hidden'); // ← add this line
+
   if (results.style.display === 'none') {
-    results.style.display = 'grid';     // match your CSS grid layout
+    results.style.display = 'grid';
     initMap();
-    // Let Leaflet recalc once it's visible
     setTimeout(() => map.invalidateSize(), 0);
   } else if (!mapReady) {
     initMap();
@@ -69,30 +82,42 @@ function plotRows(rows) {
 /* -------------------------------------------------------------
    Main search flow
 ------------------------------------------------------------- */
+
 async function showUnoccupiedBaysOnMap(streetName) {
   ensureResultsVisible();
 
   try {
-    // 1) Street -> segment IDs
     const segmentIds = await fetchSegmentIds(streetName);
     if (!segmentIds.length) {
+      resetTotalCard(`No street-segment match for "${streetName}".`);
+      resetCongestionCard('No matching street segments.');
       alert(`No street-segment match for "${streetName}".`);
       clearMarkers();
       map.setView(DEFAULT_VIEW, DEFAULT_ZOOM);
       return;
     }
+    
 
-    // 2) Segments -> kerbside IDs
     const kerbsideIds = await fetchKerbsideIdsBySegment(segmentIds);
     if (!kerbsideIds.length) {
+      resetTotalCard('No parking bays on those segments.');
+      resetCongestionCard('No bays on those segments.');
       alert('No parking bays on those segments.');
       clearMarkers();
       map.setView(DEFAULT_VIEW, DEFAULT_ZOOM);
       return;
     }
+    console.log("total kerbside id")
+    console.log(kerbsideIds.length)
 
-    // 3) Kerbside IDs -> unoccupied bay rows
     const unoccupiedRows = await fetchUnoccupiedBays(kerbsideIds);
+    console.log("total available")
+    console.log(unoccupiedRows.length)
+
+    // Update KPI cards
+    updateTotalCard(unoccupiedRows.length, streetName);
+    updateCongestionCard(unoccupiedRows.length, kerbsideIds.length, streetName);
+
     if (!unoccupiedRows.length) {
       alert(`No unoccupied bays right now on ${streetName}.`);
       clearMarkers();
@@ -103,9 +128,13 @@ async function showUnoccupiedBaysOnMap(streetName) {
     plotRows(unoccupiedRows);
   } catch (err) {
     console.error(err);
+    resetTotalCard('Search failed. Please try again.');
+    resetCongestionCard('Search failed. Please try again.');
     alert('Something went wrong while searching. Please try again.');
   }
 }
+
+
 
 /* -------------------------------------------------------------
    Wire UI
@@ -128,118 +157,55 @@ locInput?.addEventListener('keydown', (e) => {
   if (e.key === 'Enter') doSearch();
 });
 
+function updateTotalCard(count, streetName) {
+  const totalEl = document.getElementById('totalCount');
+  const labelEl = document.getElementById('summaryLabel');
+  if (!totalEl || !labelEl) return;
 
+  totalEl.textContent = Number(count).toLocaleString();
+  const now = new Date();
+  labelEl.textContent = `on ${streetName} • updated ${now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
+}
 
-// import {
-//   fetchSegmentIds,
-//   fetchKerbsideIdsBySegment,
-//   fetchUnoccupiedBays
-// } from './melbourneData.js';
+function resetTotalCard(message = 'Run a search to see live availability.') {
+  const totalEl = document.getElementById('totalCount');
+  const labelEl = document.getElementById('summaryLabel');
+  if (!totalEl || !labelEl) return;
 
-// /* -------------------------------------------------------------
-//    Helpers
-// ------------------------------------------------------------- */
-// // Parse "POINT (144.96 -37.81)"  ➜  [lat, lng]
+  totalEl.textContent = '—';
+  labelEl.textContent = message;
+}
 
+function updateCongestionCard(unoccupiedCount, totalKerbside, streetName) {
+  const pctEl = document.getElementById('congestionPct');
+  const labelEl = document.getElementById('congestionLabel');
+  if (!pctEl || !labelEl) return;
 
-// function wktPointToLatLng(wkt) {
-//   const match = /POINT\s*\(\s*([-\d.]+)\s+([-\d.]+)\s*\)/i.exec(wkt);
-//   if (!match) return null;
-//   const lng = Number(match[1]); // WKT order is lon lat
-//   const lat = Number(match[2]);
-//   return [lat, lng];
-// }
+  if (!totalKerbside) {
+    pctEl.textContent = '—';
+    labelEl.textContent = 'No bays on these segments.';
+    pctEl.className = 'big-number';
+    return;
+  }
 
-// // Centre map on first coordinate or Melbourne CBD fallback
-// function getInitialView(rows) {
-//   const first = rows.find(r => r.location);
-//   if (first) {
-//     const latLng = wktPointToLatLng(first.location);
-//     if (latLng) return latLng;
-//   }
-//   return [-37.814, 144.96332]; // Melbourne CBD
-// }
+  const rate = unoccupiedCount / totalKerbside;    // your definition
+  const pct  = Math.round(rate * 100);
 
-// /* -------------------------------------------------------------
-//    Main flow
-// ------------------------------------------------------------- */
-// async function showUnoccupiedBaysOnMap(streetName) {
-//   // 1️⃣ street → segment_id[]
-//   const segmentIds = await fetchSegmentIds(streetName);
-//   if (segmentIds.length === 0) {
-//     alert(`No street-segment match for "${streetName}".`);
-//     return;
-//   }
+  pctEl.textContent = `${pct}%`;
+  labelEl.textContent = `${unoccupiedCount} out of ${totalKerbside} parkings available \n on ${streetName}`;
 
-//   // 2️⃣ segment_id[] → kerbsideid[]
-//   const kerbsideIds = await fetchKerbsideIdsBySegment(segmentIds);
-//   if (kerbsideIds.length === 0) {
-//     alert(`No parking bays on those segments.`);
-//     return;
-//   }
-//   // console.log(unoccupiedRows)
-//   // 3️⃣ kerbsideid[] → sensor rows (Unoccupied)
-//   const unoccupiedRows = await fetchUnoccupiedBays(kerbsideIds);
-//   if (unoccupiedRows.length === 0) {
-//     alert(`No unoccupied bays right now on ${streetName}.`);
-//     return;
-//   }
+  // simple coloring (optional)
+  pctEl.className = 'big-number';
+  if (rate >= 0.40) pctEl.classList.add('good');
+  else if (rate >= 0.15) pctEl.classList.add('ok');
+  else pctEl.classList.add('bad');
+}
 
-//   /* -----------------------------------------------------------
-//      Map visualisation
-//   ----------------------------------------------------------- */
-//   function getInitialView(rows) {
-//     if (rows.length > 0) {
-//       const { lat, lon } = rows[0].location;
-//       return [lat, lon];
-//     }
-//     return [-37.814, 144.96332]; // CBD fallback
-//   }
-  
-//   // const map = L.map('map').setView(getInitialView(unoccupiedRows), 17);
-
-//   // L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-//   //   attribution: '© OpenStreetMap contributors'
-//   // }).addTo(map);
-
-//   let map; // reuse across searches
-//   if (map) map.remove(); // clear previous instance
-//   map = L.map('map').setView(getInitialView(unoccupiedRows), 17);
-
-//   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-//     attribution: '© OpenStreetMap contributors'
-//   }).addTo(map);
-
-
-//   unoccupiedRows.forEach(
-//     ({ kerbsideid, location }) => {
-
-//       const { lat, lon } = location;
-//       L.circleMarker([lat, lon], { radius: 6 })
-//       .bindPopup(`Kerbside ID ${kerbsideid}`)
-//       .addTo(map);
-//     }
-    
-
-// );
-// }
-
-// /* -------------------------------------------------------------
-//    Kick things off
-// ------------------------------------------------------------- */
-// // showUnoccupiedBaysOnMap('Queen Street');     // change street name as needed
-// // Wire up the Search button to call showUnoccupiedBaysOnMap
-// const searchBtn = document.getElementById('searchBtn');
-// const locInput  = document.getElementById('loc');
-
-// function doSearch() {
-//   const street = locInput.value.trim();
-//   if (!street) { alert('Please enter a street name.'); return; }
-//   showUnoccupiedBaysOnMap(street);
-// }
-
-// searchBtn?.addEventListener('click', doSearch);
-// locInput?.addEventListener('keydown', (e) => {
-//   if (e.key === 'Enter') doSearch();
-// });
-
+function resetCongestionCard(message = 'Waiting for a search…') {
+  const pctEl = document.getElementById('congestionPct');
+  const labelEl = document.getElementById('congestionLabel');
+  if (!pctEl || !labelEl) return;
+  pctEl.textContent = '—';
+  pctEl.className = 'big-number';
+  labelEl.textContent = message;
+}

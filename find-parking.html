@@ -35,11 +35,38 @@
 
     /* controls row */
     .controls{
-      display:grid;grid-template-columns:1fr 160px 120px;gap:24px;align-items:center;margin-bottom:12px;
-    }
-    .controls label{font-size:14px;font-weight:600;display:block;margin-bottom:4px;}
-    .controls input[type=text],
-    .controls select{width:100%;padding:8px 10px;border:2px solid #ccc;border-radius:4px;}
+  display: flex;
+  flex-direction: column;
+  align-items: center;                 /* center the whole block */
+  gap: 16px;
+}
+
+.controls > div{
+  width: min(92vw, 720px);            /* shared content width */
+}
+
+.controls label{
+  display: block;
+  text-align: center;
+  margin-bottom: 12px;                 /* bigger gap to the field */
+}
+
+.controls input[type="text"]{
+  width: 100%;
+  height: 52px;                        /* taller */
+  max-width: 720px;                    /* wider */
+  padding: 0 16px;
+  font-size: 16px;
+  border-radius: 8px;
+}
+
+/* Make the Search button row use the same centered width */
+.actions{
+  max-width: min(92vw, 720px);
+  margin: 12px auto 24px;              /* centers the row */
+  display: flex;
+  justify-content: center;
+}
 
     /* accessibility switch */
     .switch{position:relative;display:inline-block;width:46px;height:24px;}
@@ -65,10 +92,20 @@
     }
 
     .results{
-        display:grid;
-        grid-template-columns:1fr 1fr;   /* 50 % | 50 %  */
-        gap:32px;
+      display:grid;
+      grid-template-columns: 2fr 1fr; /* map | KPI */
+      gap:32px;
     }
+    .big-number{
+      font-size:64px; line-height:1; text-align:center; margin:8px 0 6px;
+    }
+    .big-number.good { color:#0a9157; }  /* higher availability */
+    .big-number.ok   { color:#b58900; }
+    .big-number.bad  { color:#c0504d; }  /* low availability */
+    .muted{
+      color:#666; font-size:13px; text-align:center;
+    }
+
 
     #map{       
         width:100%;
@@ -87,7 +124,7 @@
     .card .stats{font-family:monospace;font-size:28px;margin:8px 0;}
     .tag{display:inline-block;padding:2px 6px;font-size:11px;background:#c74242;color:#fff;border-radius:4px;}
 
-    .actions{display:flex;justify-content:center;margin:8px 0 24px;}
+    /* .actions{display:flex;justify-content:center;margin:8px 0 24px;} */
     .btn{
       padding:10px 16px;border:none;border-radius:6px;background:#0077b3;color:#fff;
       font-weight:700;cursor:pointer;box-shadow:0 2px 6px rgba(0,0,0,.1);
@@ -97,6 +134,11 @@
 
     /* add to your <style> */
     .is-hidden{ display:none; }
+
+    #summary .card {
+      align-items: center;      /* flex cross-axis (horizontal) */
+      text-align: center;       /* ensure all text is centered */
+    }
 
   </style>
 </head>
@@ -119,11 +161,11 @@
     <!-- controls -->
     <div class="controls">
       <div>
-        <label for="loc">Location</label>
-        <input id="loc" type="text" placeholder="QV, Melbourne CBD" />
+        <label for="loc">Street Name</label>
+        <input id="loc" type="text" placeholder="Queen Street" />
       </div>
 
-      <div>
+      <!-- <div>
         <label for="fee">Fee</label>
         <select id="fee">
           <option>Any</option>
@@ -139,18 +181,18 @@
           <input type="checkbox" id="accessible"/>
           <span class="slider"></span>
         </label>
-      </div>
+      </div> -->
     </div>
 
     <!-- distance slider -->
-    <div class="distance-wrapper">
+    <!-- <div class="distance-wrapper">
       <input id="distance" type="range" min="50" max="500" step="10" value="200"/>
       <span class="distance-bubble" id="distBubble">200&nbsp;m</span>
       <div class="labels">
         <span>&lt; 50 m</span>
         <span>&gt; 500 m</span>
       </div>
-    </div>
+    </div> -->
 
     <div class="actions">
       <button id="searchBtn" class="btn" type="button">Search</button>
@@ -163,7 +205,7 @@
       <div id="map"></div>
 
       <!-- Placeholder cards (you’ll likely generate these dynamically later) -->
-      <section id="parkingList">
+      <!-- <section id="parkingList">
         <article class="card">
           <h3>QV Carpark</h3>
           <p class="addr">200 Lonsdale St, Melbourne VIC 3000</p>
@@ -183,6 +225,20 @@
           <p class="addr">80 Lonsdale St, Melbourne VIC 3000</p>
           <div class="stats">60 | 200</div>
           <p>$12/hr</p>
+        </article>
+      </section> -->
+      <section id="summary">
+        <article class="card" id="summaryCard">
+          <h3>Total unoccupied bays</h3>
+          <div class="big-number" id="totalCount">—</div>
+          <p class="muted" id="summaryLabel">Run a search to see live availability.</p>
+        </article>
+      
+        <!-- NEW Congestion card -->
+        <article class="card" id="congestionCard">
+          <h3>Congestion rate</h3>
+          <div class="big-number" id="congestionPct">—</div>
+          <p class="muted" id="congestionLabel">Waiting for a search…</p>
         </article>
       </section>
     </div>
