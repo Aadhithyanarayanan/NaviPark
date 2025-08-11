@@ -6,131 +6,66 @@
     <title>NaviPark ‒ Analytics Dashboard</title>
     <style>
       /* ───────────────────────────  Base resets  ─────────────────────────── */
-      * {
-        margin: 0;
-        padding: 0;
-        box-sizing: border-box;
-        font-family: Arial, Helvetica, sans-serif;
-      }
-
-      body {
-        display: flex;
-        min-height: 100vh;
-        color: #000;
-        background: #f9fdff;
-      }
+      * { margin: 0; padding: 0; box-sizing: border-box; font-family: Arial, Helvetica, sans-serif; }
+      body { display: flex; min-height: 100vh; color: #000; background: #f9fdff; }
 
       /* ───────────────────────────  Sidebar  ─────────────────────────── */
       .sidebar{
-      width:240px;background:#0086c6;color:#fff;
-      padding:48px 0 24px;display:flex;flex-direction:column;align-items:center;gap:32px;
-    }
-
-      .brand {
-        font-size: 32px;
-        font-weight: 700;
-        color: #ffffff;
+        width:240px;background:#0086c6;color:#fff;
+        padding:48px 0 24px;display:flex;flex-direction:column;align-items:center;gap:32px;
       }
-
-      nav {
-        width: 100%;
-      }
-
+      .brand { font-size: 32px; font-weight: 700; color: #fff; }
+      nav { width: 100%; }
       nav a {
-        display: block;
-        width: calc(100% - 48px);
-        margin: 8px 24px;
-        padding: 14px 18px;
-        border-radius: 4px;
-        text-decoration: none;
-        font-weight: 600;
-        background: #ffffff;
-        color: #000000;
+        display:block; width:calc(100% - 48px); margin:8px 24px; padding:14px 18px;
+        border-radius:4px; text-decoration:none; font-weight:600; background:#fff; color:#000;
       }
-
-      nav a.active {
-        background: #d6efff; /* light highlight */
-      }
+      nav a.active { background:#d6efff; }
 
       /* ───────────────────────────  Main panel  ─────────────────────────── */
-      main {
-        flex: 1;
-        padding: 40px 56px;
-      }
-
-      h2 {
-        text-align: center;
-        font-size: 28px;
-        margin-bottom: 40px;
-      }
+      main { flex:1; padding:40px 56px; }
+      h2 { text-align:center; font-size:28px; margin-bottom:40px; }
 
       /* Charts grid */
       .charts {
-        display: grid;
-        gap: 20px;
-        grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-        justify-items: center;
+        display:grid; gap:20px;
+        grid-template-columns:repeat(auto-fit,minmax(320px,1fr));
+        justify-items:center;
       }
-
       .chart-card {
-        width: 100%;
-        max-width: 600px;
-        background: #eaf7ff;
-        border-radius: 8px;
-        padding: 10px;
-        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
-        text-align: center;
+        width:100%; max-width:600px; background:#eaf7ff;
+        border-radius:8px; padding:10px; box-shadow:0 2px 6px rgba(0,0,0,0.05); text-align:center;
       }
-
       .chart-card img {
-        width: 100%;
-        height: auto;
-        border-radius: 4px;
+        width:100%;
+        aspect-ratio: 16 / 9;   /* ensures both charts render at the same size */
+        object-fit: cover;
+        border-radius:4px;
       }
-
-      .chart-card figcaption {
-        margin-top: 12px;
-        font-weight: 600;
-      }
+      .chart-card figcaption { margin-top:12px; font-weight:600; }
 
       /* ───────────────────────────  Insights  ─────────────────────────── */
-      .insights {
-        margin-top: 48px;
+      .insights { margin-top:48px; }
+
+      /* blue outer wrapper that includes icon, title, and the white inner box */
+      .insights-container{
+        background:#eff9ff; border-radius:8px; padding:20px 24px;
+        box-shadow:0 2px 6px rgba(0,0,0,0.05);
       }
 
-      .insights-box {
-        background: #eff9ff;
-        border-radius: 8px;
-        padding: 20px 24px;
-        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+      .insights-header{
+        display:flex; align-items:center; gap:10px; margin-bottom:12px;
       }
+      .insights-icon{ font-size:28px; line-height:1; }
+      .insights-label{ font-weight:700; font-size:18px; }
 
-      /* Heading row: bulb + “Insights” */
-      .insights-header {
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        margin-bottom: 12px;
+      /* white inner box for the content */
+      .insights-box{
+        background:#ffffff; border-radius:8px; padding:16px 20px;
+        box-shadow:0 1px 4px rgba(0,0,0,0.05);
       }
-
-      .insights-icon {
-        font-size: 28px; /* bulb size */
-        line-height: 1;
-      }
-
-      .insights-label {
-        font-weight: 700;
-        font-size: 18px;
-      }
-
-      .insights-box ul {
-        margin-left: 18px;
-      }
-
-      .insights-box li {
-        margin-bottom: 8px;
-        line-height: 1.4;
-      }
+      .insights-box ul{ margin-left:18px; }
+      .insights-box li{ margin-bottom:8px; line-height:1.4; }
     </style>
   </head>
   <body>
@@ -149,37 +84,36 @@
 
       <section class="charts">
         <figure class="chart-card">
-          <img
-            src="./assets/ownership.jpeg"
-            alt="Growth of car ownership chart"
-          />
+          <img src="./assets/ownership.jpeg" alt="Growth of car ownership chart" />
           <figcaption>Growth of car ownership</figcaption>
         </figure>
 
         <figure class="chart-card">
-          <img
-            src="./assets/population.jpeg"
-            alt="Melbourne population growth chart"
-          />
+          <img src="./assets/population.jpeg" alt="Melbourne population growth chart" />
           <figcaption>Melbourne population growth</figcaption>
         </figure>
       </section>
 
       <section class="insights">
-        <div class="insights-box">
+        <div class="insights-container">
           <div class="insights-header">
             <span class="insights-icon" aria-hidden="true">💡</span>
             <span class="insights-label">Insights</span>
           </div>
 
-          <ul>
-            <li>Car ownership growth rose, peaked, and has begun to taper off.</li>
-            <li>Melbourne’s population curve rises overall, with only a brief plateau.</li>
-            <li>
-              Population is still outpacing new cars, suggesting changing transport and
-              parking demands.
-            </li>
-          </ul>
+          <div class="insights-box">
+            <ul>
+              <b>Trends in Growth of Car Ownership in Victoria</b>
+              <li>Steady increase in car ownership from 2017 to 2019, peaking in 2019.</li>
+              <li>Sharp decline from 2020 to 2021, aligning with the COVID-19 pandemic.</li>
+              <li>Likely causes: lockdowns, reduced commuting, economic uncertainty, and remote work reducing vehicle demand.</li>
+              <br>
+              <b>Population Growth in Victoria</b>
+              <li>Continuous population growth from 2000 to 2019, with faster growth after 2010.</li>
+              <li>First noticeable population drop in 2021, during the COVID-19 pandemic.</li>
+              <li>Likely causes: international border closures, reduced migration, and residents relocating away from dense urban centers during lockdowns.</li>
+            </ul>
+          </div>
         </div>
       </section>
     </main>
