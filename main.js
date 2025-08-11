@@ -189,10 +189,10 @@ function updateCongestionCard(unoccupiedCount, totalKerbside, streetName) {
   }
 
   const rate = unoccupiedCount / totalKerbside;    // your definition
-  const pct  = Math.round(rate * 100);
-
+  const pct  = 100 - Math.round(rate * 100);
+  const now = new Date();
   pctEl.textContent = `${pct}%`;
-  labelEl.textContent = `${unoccupiedCount} out of ${totalKerbside} parkings available \n on ${streetName}`;
+  labelEl.textContent = `on ${streetName} • updated ${now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
 
   // simple coloring (optional)
   pctEl.className = 'big-number';
